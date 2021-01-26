@@ -1,0 +1,8 @@
+.cache
+.env
+.config
+bin/sync
+bin/git-*
+bin/rclone*
+bin/README*
+world

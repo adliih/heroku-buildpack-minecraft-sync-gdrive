@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -eu
+
+indent() {
+  sed -u 's/^/       /'
+}
+
+export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH|JAVA_OPTS)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+BP_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUILD_DIR=$1
+CACHE_DIR=$2
+OPT_DIR=$BP_DIR/../opt/
+
+export_env_dir $3
+
+mkdir -p $BUILD_DIR/bin
+mkdir -p $BUILD_DIR/.config/rclone/
+
+echo "-----> Installing Rclone (drive) from https://rclone.org/install/"
+curl -o rclone.zip https://downloads.rclone.org/rclone-current-linux-amd64.zip
+unzip rclone.zip
+mv rclone-*/* $BUILD_DIR/bin
+rm -r rclone-*
+rm rclone.zip
+echo "       Configuring rclone for google drive..."
+cat > $BUILD_DIR/.config/rclone/rclone.conf << EndOfMessage
+[drive]
+type = drive
+client_id = ${GOOGLE_CLIENT_ID}
+client_secret = ${GOOGLE_CLIENT_SECRET}
+scope = drive
+token = ${GOOGLE_TOKEN_JSON}
+EndOfMessage
+
+echo "       done"
+
+[ ! -f $BUILD_DIR/sync ]   && cp $OPT_DIR/sync $BUILD_DIR/bin
+
+chmod +x $BUILD_DIR/bin/sync
+chmod +x $BUILD_DIR/bin/rclone
