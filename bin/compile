@@ -37,7 +37,7 @@ rm -r rclone-*
 rm rclone.zip
 echo "       Configuring rclone for google drive..."
 cat > $BUILD_DIR/.config/rclone/rclone.conf << EndOfMessage
-[drive]
+[remote]
 type = drive
 client_id = ${GOOGLE_CLIENT_ID}
 client_secret = ${GOOGLE_CLIENT_SECRET}

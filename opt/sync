@@ -2,8 +2,8 @@
 
 if [ -d world ]; then
     # World exist. Will upload
-    bin/rclone -v sync world drive:/world
+    bin/rclone -v sync world remote:/world
 else
     # No world exist. Will download
-    bin/rclone -v sync drive:/world world
+    bin/rclone -v sync remote:/world world
 fi
