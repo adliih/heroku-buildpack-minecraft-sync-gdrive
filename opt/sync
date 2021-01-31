@@ -1,9 +1,28 @@
 #!/usr/bin/env bash
 
+paths_to_be_backed_up=(
+    'world'
+    'world_nether'
+    'world_the_end'
+)
+backup_filename='minecraft_backup'
+remote_filepath="remote:/$backup_filename.zip"
+local_filepath="$backup_filename.zip"
+
 if [ -d world ]; then
     # World exist. Will upload
-    bin/rclone -v sync world remote:/world
+    zip -qr "$backup_filename" "${paths_to_be_backed_up[@]}"
+    # using --no-check-dest to force upload/replace
+    bin/rclone copy $local_filepath 'remote:/' -v --no-check-dest
 else
-    # No world exist. Will download
-    bin/rclone -v sync remote:/world world
+    # No world exist. This is usually only on the first run.
+    # Check first if there are already backup file in remote.
+    check_result=$(bin/rclone lsf $remote_filepath | grep $local_filepath)
+    if [[ -n $check_result ]]; then
+        # File exist. Continue Downloading.
+        bin/rclone copy $remote_filepath . -v
+        if [ -e $local_filepath ]; then
+            unzip $local_filepath
+        fi
+    fi
 fi
