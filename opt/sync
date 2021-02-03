@@ -9,18 +9,20 @@ backup_filename='minecraft_backup'
 remote_filepath="remote:/$backup_filename.zip"
 local_filepath="$backup_filename.zip"
 
+rclone_base_command='bin/rclone --drive-shared-with-me'
+
 if [ -d world ]; then
     # World exist. Will upload
     zip -qr "$backup_filename" "${paths_to_be_backed_up[@]}"
     # using --no-check-dest to force upload/replace
-    bin/rclone copy $local_filepath 'remote:/' -v --no-check-dest
+    eval "$rclone_base_command copy $local_filepath 'remote:/' -v --no-check-dest"
 else
     # No world exist. This is usually only on the first run.
     # Check first if there are already backup file in remote.
-    check_result=$(bin/rclone lsf $remote_filepath | grep $local_filepath)
+    check_result=$(eval "$rclone_base_command lsf $remote_filepath | grep $local_filepath")
     if [[ -n $check_result ]]; then
         # File exist. Continue Downloading.
-        bin/rclone copy $remote_filepath . -v
+        eval "$rclone_base_command copy $remote_filepath . -v"
         if [ -e $local_filepath ]; then
             unzip $local_filepath
         fi
